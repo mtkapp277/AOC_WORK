@@ -1,6 +1,8 @@
 #!/bin/ksh
+# This script is to setup and kick off the awk scripts to format the log files
 
 while getopts :h:D:d:t:c:e:w: ARGUMENTS ; do
+# getopts needs each flag to have an argument in order to work
 	case ${ARGUMENTS} in 
 		h) 	echo "-help"
 			echo "-D - DEFAULTS"
@@ -9,8 +11,14 @@ while getopts :h:D:d:t:c:e:w: ARGUMENTS ; do
 			echo "-c - Test Case"
 			echo "-e - Full Path to EST sita log"
 			echo "-w - Full Path to WST sita log"
+			exit 
 			;;	
-		D) echo "Using DEFAULT logs ${OPTARG}";;	
+		D)	echo "Using DEFAULT logs ${OPTARG}"
+			EST_LOG=${HOME}/GIT/AOC_WORK/csp_client_est_sita_ORIG
+			WST_LOG=${HOME}/GIT/AOC_WORK/csp_client_wst_sita_ORIG
+			DATE=$( date +"%Y-%m-%d" ) 
+			TIME="0000-$( date +"%H%M" )"
+			;;	
 		d) 	echo "Date:${OPTARG} [YYYY-MM-DD]"
 			DATE=${OPTARG}
 			;;	
@@ -18,10 +26,24 @@ while getopts :h:D:d:t:c:e:w: ARGUMENTS ; do
 			TIME=${OPTARG} 
 			;;	
 		c) echo "Test Case:${OPTARG}";;	
-		e) echo "EST:${OPTARG}";;	
-		w) echo "WST:${OPTARG}";;	
+		e)	echo "EST:${OPTARG}"
+			EST_LOG=${OPTARG}
+			;;	
+		w)	echo "WST:${OPTARG}"
+			WST_LOG=${OPTARG}
+			;;	
 	esac
 done
+# THIS WILL CURRENTLY OVERWRITE -e & -w
+EST_LOG=${HOME}/GIT/AOC_WORK/csp_client_est_sita_ORIG
+WST_LOG=${HOME}/GIT/AOC_WORK/csp_client_wst_sita_ORIG
+
+echo "------------------ CURRENT SETTINGS ----------------------"
+echo "DATE=${DATE}"
+echo "TIME=${TIME}"
+echo "EST_LOG=${EST_LOG}"
+echo "WST_LOG=${WST_LOG}"
+echo "----------------------------------------------------------"
 
 #sed -e "s@.\$@<CR>@g" | sed -e "s@\n@<LF>@g" > no_spec_char_wst.log
 
@@ -39,7 +61,7 @@ fi
 SITA_TEST_REPO=${HOME}/SITA_TEST_REPO
 echo "SITA_TEST_REPO=${SITA_TEST_REPO}" 
 
-for SITA_LOG in ~kappm/GIT/AOC_WORK/csp_client_wst_sita_ORIG ~kappm/GIT/AOC_WORK/csp_client_est_sita_ORIG; do
+for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 	echo "\nWorking ${SITA_LOG}"
 	SITA_LOG_NAME=$( echo ${SITA_LOG} | cut -d "/" -f 8 | cut -d "_" -f 1-4 )
 	echo "SITA_LOG_NAME=${SITA_LOG_NAME}"
@@ -77,9 +99,15 @@ FINISH_SS=$(( ${FINSIH_HH}*3600 + ${FINSIH_MM}*60 + 60 )) #Adding a FLUX minute 
 echo "Start Secs:${START_SS}"
 echo "Finish Secs:${FINISH_SS}"
 
+TOSS=${SITA_TEST_REPO}/OUT_OF_RANGE_FILTER.out
+KEEP=${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out
+touch ${TOSS}
+touch ${KEEP}
+
 if [[ ${DATE} != "" ]]; then
 	echo "Filtering out by Date"
-	cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" | awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){ print $0} }' > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out
+	cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" | \
+		awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 >> KEEP } else {print $0 >> TOSS } }' 
 	${HOME}/GIT/AOC_WORK/fixHeader.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out > ${SITA_TEST_REPO}/parsedAOC_FILTERED.out
 else
 	echo "Parsing lines & updating header information... [NOT FILTERED]"
