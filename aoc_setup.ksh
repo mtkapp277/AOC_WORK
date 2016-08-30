@@ -1,9 +1,19 @@
 #!/bin/ksh
 
-while getopts :D:d:t:c:e:w: ARGUMENTS ; do
+while getopts :h:D:d:t:c:e:w: ARGUMENTS ; do
 	case ${ARGUMENTS} in 
+		h) 	echo "-help"
+			echo "-D - DEFAULTS"
+			echo "-d - Date"
+			echo "-t - Time"
+			echo "-c - Test Case"
+			echo "-e - Full Path to EST sita log"
+			echo "-w - Full Path to WST sita log"
+			;;	
 		D) echo "Using DEFAULT logs ${OPTARG}";;	
-		d) echo "Date:${OPTARG}";;	
+		d) 	echo "Date:${OPTARG} [YYYY-MM-DD]"
+			DATE=${OPTARG}
+			;;	
 		t) echo "Time:${OPTARG}";;	
 		c) echo "Test Case:${OPTARG}";;	
 		e) echo "EST:${OPTARG}";;	
@@ -11,12 +21,7 @@ while getopts :D:d:t:c:e:w: ARGUMENTS ; do
 	esac
 done
 
-#cat csp_client_wst_sita_ORIG | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@	@<TAB>@g" | sed -e "s@.\$@<CR>@g" | sed -e "s@\n@<LF>@g" > no_spec_char_wst.log
-
-#echo "Fixing wst"
-#cat csp_client_wst_sita_ORIG | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@	@<TAB>@g" > no_spec_char_wst.log
-#echo "Fixing est"
-#cat csp_client_est_sita_ORIG | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@@@g" | sed -e "s@	@<TAB>@g" > no_spec_char_est.log
+#sed -e "s@.\$@<CR>@g" | sed -e "s@\n@<LF>@g" > no_spec_char_wst.log
 
 cd ${HOME}
 if [[ -d ${HOME}/SITA_TEST_REPO ]]; then
@@ -55,5 +60,11 @@ done
 echo "\nTime sorting SITA_LOGS_COMBINED.out"
 cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out | sort  > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out
 
+if [[ ${DATE} != "" ]]; then
+	echo "Filtering out by Date"
+	cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out
+fi
+
 echo "Parsing lines & updating header information..."
 ${HOME}/GIT/AOC_WORK/parseLine.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out > ${SITA_TEST_REPO}/parsedAOC.out
+${HOME}/GIT/AOC_WORK/parseLine.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out > ${SITA_TEST_REPO}/parsedAOC_FILTERED.out
