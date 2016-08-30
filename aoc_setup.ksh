@@ -1,8 +1,13 @@
 #!/bin/ksh
 
-while getopts :d:t:c:e:w: ARGUMENTS
+while getopts :D:d:t:c:e:w: ARGUMENTS
 	case ${ARGUMENTS} in 
-		d) echo "date ${OPTARG}";;	
+		D) echo "Using DEFAULT logs ${OPTARG}";;	
+		d) echo "Date:${OPTARG}";;	
+		t) echo "Time:${OPTARG}";;	
+		c) echo "Test Case:${OPTARG}";;	
+		e) echo "EST:${OPTARG}";;	
+		w) echo "WST:${OPTARG}";;	
 	esac
 done
 
