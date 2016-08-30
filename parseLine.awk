@@ -19,8 +19,8 @@ BEGIN {
 	ZERO=line_array[3]	
 	LDIR=line_array[4]	
 	#ITER=line_array[5]
-	FLID=line_array[6]	
-	TYPE=line_array[7]
+	FLID="<UNK_FLID>" #line_array[6]	
+	TYPE="<UNK_TYPE>" #line_array[7]
 	MSG=$8
 	for ( i = 9; i<= NF; i++ ){
 		if ( line_array[i] == "Type" ){
