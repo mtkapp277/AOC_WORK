@@ -63,9 +63,9 @@ cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out | sort  > ${SITA_TEST_REPO}/SITA_LO
 if [[ ${DATE} != "" ]]; then
 	echo "Filtering out by Date"
 	cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out
-	${HOME}/GIT/AOC_WORK/parseLine.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out > ${SITA_TEST_REPO}/parsedAOC_FILTERED.out
+	${HOME}/GIT/AOC_WORK/fixHeader.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out > ${SITA_TEST_REPO}/parsedAOC_FILTERED.out
 else
 	echo "Parsing lines & updating header information... [NOT FILTERED]"
-	${HOME}/GIT/AOC_WORK/parseLine.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out > ${SITA_TEST_REPO}/parsedAOC.out
+	${HOME}/GIT/AOC_WORK/fixHeader.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out > ${SITA_TEST_REPO}/parsedAOC.out
 fi
 
