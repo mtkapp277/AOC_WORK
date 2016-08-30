@@ -16,10 +16,11 @@ BEGIN {
 	split($0,line_array," ")
 	DATE=line_array[1]	
 	TIME=line_array[2]	
+	SECS=line_array[3]	
 	FLID="<UNK_FLID>"
 	ITER="<ITER>"
 	TYPE="<UNK_TYPE>" 
-	LDIR=line_array[6]	
+	LDIR=line_array[7]	
 
 	#ZERO=line_array[3]	
 	#ITER=line_array[5]
@@ -42,7 +43,7 @@ BEGIN {
 	#ITER=ARR[FLID]++
 	ARR[FLID]++    # THIS IS HOW WE COUNT THE NUMBER OF TIMES A FLID IS SEEN
 	ITER=ARR[FLID]
-	print DATE " " TIME " " FLID " " ITER " " TYPE " " LDIR " | " MSG
+	print DATE " " TIME " " SECS " " FLID " " ITER " " TYPE " " LDIR " | " MSG
 }
 
 END {

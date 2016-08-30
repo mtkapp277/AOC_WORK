@@ -21,18 +21,27 @@
 function printLine() {
 	split($0,line_array," ")
 #	MSG=line_array[1] " " line_array[2] " " line_array[3] " " LOG_DIRECTION " " ITERATION " " FLID " " TYPE
-	MSG=line_array[1] " " line_array[2] " " FLID " " ITERATION " " TYPE " " LOG_DIRECTION
+	MSG=line_array[1] " " line_array[2] " " TOT_SEC " " FLID " " ITERATION " " TYPE " " LOG_DIRECTION
 	for ( i = 4; i<= NF; i++ ){
 		MSG=MSG " " $i
 	}
 }
+function getSeconds(CLOCK){
+	split(CLOCK,time_array,":")
+	HH=time_array[1]
+	MM=time_array[2]
+	SS=time_array[3]
+	TOT_SEC = (HH*60*60) + (MM*60) + (SS);
+	return TOT_SEC;
+}
 
 BEGIN {
 	MSG="";
-	FLID="<FLID>"
+	TOT_SEC="<TOT_SEC>";
+	FLID="<FLID>";
 	ITERATION="<ITERATION>";
-	TYPE="<TYPE>"
-	STATUS="STOPPED"
+	TYPE="<TYPE>";
+	STATUS="STOPPED";
 }
 {
 	LINE=$0;
@@ -40,6 +49,7 @@ BEGIN {
 	if( STATUS == "STOPPED" ){
 		if( $0 ~ /bytes of/ ){
 			split($0,line_array," ")
+			getSeconds(line_array[2])
 			printLine()
 			STATUS="STARTED"
 		}
@@ -52,6 +62,7 @@ BEGIN {
 			# This is basically saying once you come back around to another "bytes of" msg, Print out what you currently have in MSG
 			#  then Start fresh (ie printLine)
 			print MSG "\n" # This is the actually PRINT line. ABSOLUTELY NEEDED
+			getSeconds($2)
 			printLine()
 		}
 		else {
