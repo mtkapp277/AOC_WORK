@@ -18,6 +18,7 @@ while getopts :h:D:d:t:c:e:w: ARGUMENTS ; do
 			WST_LOG=${HOME}/GIT/AOC_WORK/csp_client_wst_sita_ORIG
 			DATE=$( date +"%Y-%m-%d" ) 
 			TIME="0000-$( date +"%H%M" )"
+			CASE=${HOME}/GIT/AOC_WORK/PDC_MATRIX.compare
 			;;	
 		d) 	echo "Date:${OPTARG} [YYYY-MM-DD]"
 			DATE=${OPTARG}
@@ -37,12 +38,14 @@ done
 # THIS WILL CURRENTLY OVERWRITE -e & -w
 EST_LOG=${HOME}/GIT/AOC_WORK/csp_client_est_sita_ORIG
 WST_LOG=${HOME}/GIT/AOC_WORK/csp_client_wst_sita_ORIG
+CASE=${HOME}/GIT/AOC_WORK/PDC_MATRIX.compare
 
 echo "------------------ CURRENT SETTINGS ----------------------"
 echo "DATE=${DATE}"
 echo "TIME=${TIME}"
 echo "EST_LOG=${EST_LOG}"
 echo "WST_LOG=${WST_LOG}"
+echo "CASE=${CASE}"
 echo "----------------------------------------------------------"
 
 #sed -e "s@.\$@<CR>@g" | sed -e "s@\n@<LF>@g" > no_spec_char_wst.log
@@ -99,18 +102,32 @@ FINISH_SS=$(( ${FINSIH_HH}*3600 + ${FINSIH_MM}*60 + 60 )) #Adding a FLUX minute 
 echo "Start Secs:${START_SS}"
 echo "Finish Secs:${FINISH_SS}"
 
-TOSS=${SITA_TEST_REPO}/OUT_OF_RANGE_FILTER.out
+TOSS=${SITA_TEST_REPO}/OUT_OF_TIME_RANGE.out
 KEEP=${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out
 touch ${TOSS}
 touch ${KEEP}
 
-if [[ ${DATE} != "" ]]; then
-	echo "Filtering out by Date"
-	cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" | \
-		awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 >> KEEP } else {print $0 >> TOSS } }' 
-	${HOME}/GIT/AOC_WORK/fixHeader.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out > ${SITA_TEST_REPO}/parsedAOC_FILTERED.out
-else
-	echo "Parsing lines & updating header information... [NOT FILTERED]"
-	${HOME}/GIT/AOC_WORK/fixHeader.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out > ${SITA_TEST_REPO}/parsedAOC.out
-fi
+echo "Filtering out by Date"
+cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" | \
+	awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 >> KEEP } else {print $0 >> TOSS } }' 
+${HOME}/GIT/AOC_WORK/fixHeader.awk ${KEEP} > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out
+
+ANALYZE_FILE=${SITA_TEST_REPO}/TEST_CASE_FILTER.out
+IGNORED_FILE=${SITA_TEST_REPO}/TEST_CASE_IGNORED.out
+touch ${ANALYZE_FILE}
+touch ${IGNORED_FILE}
+
+echo "\nGetting TEST CASE LINE"
+for TEST_CASE in $( cat ${CASE} | sed -e "s@ @_@g" | grep "<BEGIN" ); do
+
+	FLID=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $2}' )
+	ITER=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $3}' )
+	TYPE=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $4}' )
+	echo "${FLID} | ${ITER} | ${TYPE}"
+	${HOME}/GIT/AOC_WORK/correspondence.awk -v FLID="${FLID}" -v ITER="${ITER}" -v TYPE="${TYPE}" -v ANALYZE_FILE="${ANALYZE_FILE}" -v IGNORED_FILE="${IGNORED_FILE}" ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out
+
+#	GREP_LINE=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $2, $3, $4}' )
+#	echo "grepping \"${GREP_LINE}\""
+#	grep "${GREP_LINE}" ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out >> ${SITA_TEST_REPO}/TEST_CASE_FILTER.out
+done
 
