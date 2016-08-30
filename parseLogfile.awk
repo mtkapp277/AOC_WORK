@@ -16,9 +16,12 @@
 #PDC
 #TIS
 
+# HEADER ORDER:
+# DATE TIME FLID ITER TYPE ZONAL   # Removing "ZEROS"
 function printLine() {
 	split($0,line_array," ")
-	MSG=line_array[1] " " line_array[2] " " line_array[3] " " LOG_DIRECTION " " ITERATION " " FLID " " TYPE
+#	MSG=line_array[1] " " line_array[2] " " line_array[3] " " LOG_DIRECTION " " ITERATION " " FLID " " TYPE
+	MSG=line_array[1] " " line_array[2] " " FLID " " ITERATION " " TYPE " " LOG_DIRECTION
 	for ( i = 4; i<= NF; i++ ){
 		MSG=MSG " " $i
 	}
@@ -26,8 +29,8 @@ function printLine() {
 
 BEGIN {
 	MSG="";
-	ITERATION="<ITERATION>";
 	FLID="<FLID>"
+	ITERATION="<ITERATION>";
 	TYPE="<TYPE>"
 	STATUS="STOPPED"
 }
@@ -46,7 +49,9 @@ BEGIN {
 	}
 	else { #STATUS == STARTED
 		if(	$0 ~ /bytes of/ ){
-			print MSG "\n"
+			# This is basically saying once you come back around to another "bytes of" msg, Print out what you currently have in MSG
+			#  then Start fresh (ie printLine)
+			print MSG "\n" # This is the actually PRINT line. ABSOLUTELY NEEDED
 			printLine()
 		}
 		else {
@@ -55,6 +60,6 @@ BEGIN {
 	}
 }
 END {
-	print MSG
+	print MSG # THIS COULD BE CAUSING A DUPLICATE LINE
 }
 

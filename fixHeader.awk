@@ -16,11 +16,13 @@ BEGIN {
 	split($0,line_array," ")
 	DATE=line_array[1]	
 	TIME=line_array[2]	
-	ZERO=line_array[3]	
-	LDIR=line_array[4]	
+	FLID="<UNK_FLID>"
+	ITER="<ITER>"
+	TYPE="<UNK_TYPE>" 
+	LDIR=line_array[6]	
+
+	#ZERO=line_array[3]	
 	#ITER=line_array[5]
-	FLID="<UNK_FLID>" #line_array[6]	
-	TYPE="<UNK_TYPE>" #line_array[7]
 	MSG=$8
 	for ( i = 9; i<= NF; i++ ){
 		if ( line_array[i] == "Type" && TYPE == "<UNK_TYPE>" ){
@@ -38,9 +40,9 @@ BEGIN {
 		MSG=MSG " " $i
 	}
 	#ITER=ARR[FLID]++
-	ARR[FLID]++
+	ARR[FLID]++    # THIS IS HOW WE COUNT THE NUMBER OF TIMES A FLID IS SEEN
 	ITER=ARR[FLID]
-	print DATE " " TIME " " ZERO " " LDIR " " ITER " " FLID " " TYPE " | " MSG
+	print DATE " " TIME " " FLID " " ITER " " TYPE " " LDIR " | " MSG
 }
 
 END {
