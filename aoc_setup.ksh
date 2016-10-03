@@ -35,10 +35,15 @@ while getopts :h:D:d:t:c:e:w: ARGUMENTS ; do
 			;;	
 	esac
 done
-# THIS WILL CURRENTLY OVERWRITE -e & -w
-EST_LOG=${HOME}/GIT/AOC_WORK/csp_client_est_sita_ORIG
+if [[ ${EST_LOG} = "" ]]; then
+	EST_LOG=${HOME}/GIT/AOC_WORK/csp_client_est_sita_ORIG
+fi
+if [[ ${WST_LOG} = "" ]]; then
 WST_LOG=${HOME}/GIT/AOC_WORK/csp_client_wst_sita_ORIG
-CASE=${HOME}/GIT/AOC_WORK/PDC_MATRIX.compare
+fi
+if [[ ${CASE} = "" ]]; then
+	CASE=${HOME}/GIT/AOC_WORK/PDC_MATRIX.compare
+fi
 
 echo "------------------ CURRENT SETTINGS ----------------------"
 echo "DATE=${DATE}"
@@ -69,6 +74,9 @@ for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 	SITA_LOG_NAME=$( echo ${SITA_LOG} | cut -d "/" -f 8 | cut -d "_" -f 1-4 )
 	echo "SITA_LOG_NAME=${SITA_LOG_NAME}"
 
+	FIRST_DATE=$( head -1 ${SITA_LOG} | awk '{print $1}' )
+	echo "FIRST_DATE=${FIRST_DATE}"
+
 	echo "Cleaning up sita log files now and replacing control characters, tabs, & new lines"
 	cat ${SITA_LOG} | 	sed -e "s@@@g" | \
 						sed -e "s@@@g" | \
@@ -80,12 +88,14 @@ for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 	echo "\n\nParsing cleaned up log file & adding in header now..."
 	ZONAL=$( echo ${SITA_LOG_NAME} | cut -d "_" -f 3 )
 	echo "\nparseLogfile.awk -v LOG_DIRECTION=\"${ZONAL}\" ${SITA_TEST_REPO}/${SITA_LOG_NAME}_CLEANED >> SITA_LOGS_COMBINED.out"
-	${HOME}/GIT/AOC_WORK/parseLogfile.awk -v LOG_DIRECTION="${ZONAL}" ${SITA_TEST_REPO}/${SITA_LOG_NAME}_CLEANED >> ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out
+	${HOME}/GIT/AOC_WORK/parseLogfile.awk -v LOG_DIRECTION="${ZONAL}" -v FIRST_DATE="${FIRST_DATE}" ${SITA_TEST_REPO}/${SITA_LOG_NAME}_CLEANED >> ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out
 	echo "=========================================================================================================================="
 done
 
 echo "\nTime sorting SITA_LOGS_COMBINED.out"
 cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out | sort  > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out
+
+INPUT_DATE=$( echo ${DATE} | awk '{split($0,date_array,"-") print date_array[1] date_array[2] date_array[3] }' )
 
 START_TIME=$( echo ${TIME} | cut -d "-" -f 1 )
 START_HH=$( echo ${START_TIME} | cut -c 1-2 )
