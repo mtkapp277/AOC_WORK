@@ -6,9 +6,9 @@ while getopts :h:D:d:t:c:e:w: ARGUMENTS ; do
 	case ${ARGUMENTS} in 
 		h) 	echo "-help"
 			echo "-D - DEFAULTS"
-			echo "-d - Date"
-			echo "-t - Time"
-			echo "-c - Test Case"
+			echo "-d - Date [YYYY-MM-DD]"
+			echo "-t - Time [hhmm-hhmm]"
+			echo "-c - Test Case [1-8]"
 			echo "-e - Full Path to EST sita log"
 			echo "-w - Full Path to WST sita log"
 			exit 
@@ -92,10 +92,10 @@ for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 	echo "=========================================================================================================================="
 done
 
-echo "\nTime sorting SITA_LOGS_COMBINED.out"
-cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out | sort  > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out
+echo "\nTime sorting SITA_LOGS_COMBINED.out" ##        V this grep removes blank lines
+cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out | sort | grep -v -e "^$" > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out
 
-INPUT_DATE=$( echo ${DATE} | awk '{split($0,date_array,"-") print date_array[1] date_array[2] date_array[3] }' )
+INPUT_DATE=$( echo ${DATE} | awk '{split($0,date_array,"-"); print date_array[1] date_array[2] date_array[3] }' )
 
 START_TIME=$( echo ${TIME} | cut -d "-" -f 1 )
 START_HH=$( echo ${START_TIME} | cut -c 1-2 )
@@ -119,8 +119,11 @@ touch ${KEEP}
 
 echo "Filtering out by Date"
 cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" | \
-	awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 >> KEEP } else {print $0 >> TOSS } }' 
+	#awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 >> KEEP } else {print $0 >> TOSS } }' 
+	awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 } }' 
 ${HOME}/GIT/AOC_WORK/fixHeader.awk ${KEEP} > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out
+
+echo "Starting Comparision work... i think"
 
 ANALYZE_FILE=${SITA_TEST_REPO}/TEST_CASE_FILTER.out
 IGNORED_FILE=${SITA_TEST_REPO}/TEST_CASE_IGNORED.out

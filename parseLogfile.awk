@@ -40,7 +40,8 @@ function getSeconds(date,CLOCK){
 	HH=time_array[1]
 	MM=time_array[2]
 	SS=time_array[3]
-	TOT_SEC = (D*24*3600) + (HH*60*60) + (MM*60) + (SS);
+	#TOT_SEC = (D*24*3600) + (HH*60*60) + (MM*60) + (SS);
+	TOT_SEC = (HH*60*60) + (MM*60) + (SS);
 	return TOT_SEC;
 }
 
