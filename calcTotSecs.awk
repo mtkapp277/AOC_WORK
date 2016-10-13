@@ -19,8 +19,8 @@ function std_error(msg){
 
 function getSeconds(DAY,CLOCK){
    
-   if( DAY != LINE_DATE ){   # This if statement assumes the dates in the file are sorted correctly
-       current_day = DAY;
+   if( DAY != current_day ){   # This if statement assumes the dates in the file are sorted correctly
+       current_day = DAY;      # This can only see a date difference and add 1 (if date is a 7 day diff, then it still only adds 1)
        D=D+1;
    }
    
@@ -34,7 +34,8 @@ function getSeconds(DAY,CLOCK){
 }
 
 BEGIN {
-	#USER_DATE=convertDate(DATE)
+	USER_DATE=DATE
+	current_day=DATE;
 	D=0
 }
 
@@ -47,16 +48,19 @@ BEGIN {
 
 
 	if( LINE_DATE < USER_DATE ){
-		std_error("Date Out of Range: ", $0)
+		std_error("\nERROR: Date Out of Range - "$0)
 	}
 	else if( LINE_DATE >= USER_DATE ){
 		TOT_SEC=getSeconds(LINE_DATE,LINE_TIME)
-	}
-	for (i=1; i<=NF; i++ ){
-		if( i=3 ){
-			MSG=MSG " " TOT_SEC
+		for (i=1; i<=NF; i++ ){
+			if( i == 3 ){
+				MSG=MSG " " TOT_SEC
+			}
+			else {
+				MSG=MSG " " $i
+			}
 		}
-		MSG=MSG " " $i
+		print MSG
 	}
 }
 
