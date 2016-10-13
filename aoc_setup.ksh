@@ -78,15 +78,17 @@ else
 fi
 SITA_TEST_REPO=${HOME}/SITA_TEST_REPO
 echo "SITA_TEST_REPO=${SITA_TEST_REPO}" 
+chmod -R 755  ${SITA_TEST_REPO}
 
 #Essentially Directory Info tracking
-echo "$*\n$( date +"%Y%m%d %H:%M:%S Z" )\nEST_LOG=${EST_LOG}\nWST_LOG${WST_LOG}" > ${SITA_TEST_REPO}/EnteredInfo_${DATE}_${TIME}_${CASE}.info
+echo "Creating Tracking information file"
+echo "${USER} entered:\n\taoc_setup.ksh $*\t on $( date +"%Y%m%d %H:%M:%S Z" )\n\nEST_LOG=${EST_LOG}\nWST_LOG${WST_LOG}" > ${SITA_TEST_REPO}/EnteredInfo_${DATE}_${TIME}.info
 
 
 # This for loop/awk combines all "bytes of" messages onto a single line from each sita file, then combines both Est/Wst Logs 
 for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 	echo "\nWorking ${SITA_LOG}"
-	SITA_LOG_NAME=$( echo ${SITA_LOG} | cut -d "/" -f 8 | cut -d "_" -f 1-4 )
+	SITA_LOG_NAME=$( basename ${SITA_LOG} | cut -d "_" -f 1-4 )
 	echo "SITA_LOG_NAME=${SITA_LOG_NAME}"
 
 	FIRST_DATE=$( head -1 ${SITA_LOG} | awk '{print $1}' )
@@ -103,6 +105,7 @@ for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 	echo "\n\nParsing cleaned up log file & adding in header now..."
 	ZONAL=$( echo ${SITA_LOG_NAME} | cut -d "_" -f 3 )
 	echo "\nparseLogfile.awk -v LOG_DIRECTION=\"${ZONAL}\" ${SITA_TEST_REPO}/${SITA_LOG_NAME}_CLEANED >> SITA_LOGS_COMBINED.out"
+# I THINK I CAN TAKE OUT THE FIRST DATE VARIABLE
 	${HOME}/GIT/AOC_WORK/parseLogfile.awk -v LOG_DIRECTION="${ZONAL}" -v FIRST_DATE="${FIRST_DATE}" ${SITA_TEST_REPO}/${SITA_LOG_NAME}_CLEANED >> ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out
 	echo "=========================================================================================================================="
 done
@@ -110,6 +113,11 @@ done
 echo "\nTime sorting SITA_LOGS_COMBINED.out" ##        V this grep removes blank lines
 cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out | sort | grep -v -e "^$" > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out
 
+
+
+
+
+#############${HOME}/GIT/AOC_WORK/fixHeader.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out  > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FIXED.out
 INPUT_DATE=$( echo ${DATE} | awk '{split($0,date_array,"-"); print date_array[1] date_array[2] date_array[3] }' )
 
 START_TIME=$( echo ${TIME} | cut -d "-" -f 1 )
@@ -135,7 +143,7 @@ touch ${KEEP}
 echo "Filtering out by Date"
 cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" | \
 	#awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 >> KEEP } else {print $0 >> TOSS } }' 
-	awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 } }' 
+	awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 } }'    > ${SITA_TEST_REPO}/test.filter
 ${HOME}/GIT/AOC_WORK/fixHeader.awk ${KEEP} > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out
 
 echo "Starting Comparision work... i think"
@@ -158,4 +166,4 @@ for TEST_CASE in $( cat ${CASE} | sed -e "s@ @_@g" | grep "<BEGIN" ); do
 #	echo "grepping \"${GREP_LINE}\""
 #	grep "${GREP_LINE}" ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out >> ${SITA_TEST_REPO}/TEST_CASE_FILTER.out
 done
-
+ls -ltr  $PWD/${SITA_TEST_REPO}
