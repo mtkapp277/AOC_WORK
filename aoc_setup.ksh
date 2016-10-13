@@ -1,18 +1,28 @@
 #!/bin/ksh
 # This script is to setup and kick off the awk scripts to format the log files
 
+function helper {
+	echo "\nThis script will create a new directory (${HOME}/SITA_TEST_REPO) and combine and analyze the sita logs\n"
+	echo "\t-h <any text> #Text is needed after -h because script uses getopts"
+	echo "\t-D - DEFAULTS \n\t\tDATE=${DATE} \n\t\tTIME=${TIME} \n\t\tCASE=${CASE}"
+	echo "\t-d - Date [YYYY-MM-DD]"
+	echo "\t-t - Time [hhmm-hhmm]"
+	echo "\t-c - Test Case [1-8]"
+	echo "\t-e - Full Path to EST sita log"
+	echo "\t-w - Full Path to WST sita log"
+	echo "\nExample:\n\taoc_setup.ksh -d 2016-09-29 -t 1721-2000 -c 8 -e /path/to/est/sita/log -w /path/to/wst/sita/log\n\n"
+	exit
+}
+DATE=$( date +"%Y-%m-%d" ) 
+TIME="0000-$( date +"%H%M" )"
+
+if [[ -z ${1} || ${1} = "h" || ${1} = "-h" ]]; then
+	helper
+fi
 while getopts :h:D:d:t:c:e:w: ARGUMENTS ; do
 # getopts needs each flag to have an argument in order to work
 	case ${ARGUMENTS} in 
-		h) 	echo "-help"
-			echo "-D - DEFAULTS"
-			echo "-d - Date [YYYY-MM-DD]"
-			echo "-t - Time [hhmm-hhmm]"
-			echo "-c - Test Case [1-8]"
-			echo "-e - Full Path to EST sita log"
-			echo "-w - Full Path to WST sita log"
-			exit 
-			;;	
+		h) 	helper ;;	
 		D)	echo "Using DEFAULT logs ${OPTARG}"
 			EST_LOG=${HOME}/GIT/AOC_WORK/csp_client_est_sita_ORIG
 			WST_LOG=${HOME}/GIT/AOC_WORK/csp_client_wst_sita_ORIG
@@ -69,6 +79,11 @@ fi
 SITA_TEST_REPO=${HOME}/SITA_TEST_REPO
 echo "SITA_TEST_REPO=${SITA_TEST_REPO}" 
 
+#Essentially Directory Info tracking
+echo "$*\n$( date +"%Y%m%d %H:%M:%S Z" )\nEST_LOG=${EST_LOG}\nWST_LOG${WST_LOG}" > ${SITA_TEST_REPO}/EnteredInfo_${DATE}_${TIME}_${CASE}.info
+
+
+# This for loop/awk combines all "bytes of" messages onto a single line from each sita file, then combines both Est/Wst Logs 
 for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 	echo "\nWorking ${SITA_LOG}"
 	SITA_LOG_NAME=$( echo ${SITA_LOG} | cut -d "/" -f 8 | cut -d "_" -f 1-4 )
