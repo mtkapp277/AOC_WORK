@@ -36,31 +36,52 @@ function getSeconds(DAY,CLOCK){
 BEGIN {
 	USER_DATE=DATE
 	current_day=DATE;
-	D=0
+	D=0;
+	
+	split(TIME,time_array,"-")
+	START_TIME=time_array[1]
+	START_HH=substr(START_TIME,1,2)
+	START_MM=substr(START_TIME,3,2)
+
+	STOP_TIME=time_array[2]
+	STOP_HH=substr(STOP_TIME,1,2)
+	STOP_MM=substr(STOP_TIME,3,2)
+
+	START_SEC = (START_HH*60*60) + (START_MM*60);
+	STOP_SEC = (STOP_HH*60*60) + (STOP_MM*60) + (60) ;
+
+	#print START_TIME " " START_HH ":" START_MM " " START_SEC " " STOP_SEC "-" STOP_TIME"-" STOP_HH":"STOP_MM
+	#exit
 }
 
 {
 	LINE_DATE=$1
 	LINE_TIME=$2
-
 	MSG=""
 	split($0,line_array," ")
 
+	#Probably gonna add rebase function and field ****
 
 	if( LINE_DATE < USER_DATE ){
-		std_error("\nERROR: Date Out of Range - "$0)
+		std_error("ERROR: Date Out of Range - "$0)
 	}
 	else if( LINE_DATE >= USER_DATE ){
 		TOT_SEC=getSeconds(LINE_DATE,LINE_TIME)
-		for (i=1; i<=NF; i++ ){
-			if( i == 3 ){
-				MSG=MSG " " TOT_SEC
+
+		if( TOT_SEC >= START_SEC && TOT_SEC <= STOP_SEC ){
+			for (i=1; i<=NF; i++ ){   # This is probably the least efficient way to replace the place holders in field 3 with the total seconds
+				if( i == 3 ){
+					MSG=MSG " " TOT_SEC
+				}
+				else {
+					MSG=MSG " " $i
+				}
 			}
-			else {
-				MSG=MSG " " $i
-			}
+			print MSG
 		}
-		print MSG
+		else {
+			std_error("ERROR: Time Out of Range - "$0)
+		}
 	}
 }
 

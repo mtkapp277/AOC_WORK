@@ -82,11 +82,12 @@ chmod -R 755  ${SITA_TEST_REPO}
 
 #Essentially Directory Info tracking
 echo "Creating Tracking information file"
-echo "${USER} entered:\n\taoc_setup.ksh $*\t on $( date +"%Y%m%d %H:%M:%S Z" )\n\nEST_LOG=${EST_LOG}\nWST_LOG${WST_LOG}" > ${SITA_TEST_REPO}/EnteredInfo_${DATE}_${TIME}.info
+echo "${USER} entered:\n\taoc_setup.ksh $*\t on $( date +"%Y%m%d %H:%M:%S Z" )\n\nEST_LOG=${EST_LOG}\nWST_LOG=${WST_LOG}" > ${SITA_TEST_REPO}/EnteredInfo_${DATE}_${TIME}.info
 
 
 # This for loop/awk combines all "bytes of" messages onto a single line from each sita file, then combines both Est/Wst Logs 
 for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
+	echo "--------------------------------------------------------------------------------------------------------------------------"
 	echo "\nWorking ${SITA_LOG}"
 	SITA_LOG_NAME=$( basename ${SITA_LOG} | cut -d "_" -f 1-4 )
 	echo "SITA_LOG_NAME=${SITA_LOG_NAME}"
@@ -99,7 +100,7 @@ for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 						sed -e "s@@@g" | \
 						sed -e "s@@@g" | \
 						sed -e "s@@@g" | \
-						sed -e "s@	@<TAB>@g"  > ${SITA_TEST_REPO}/${SITA_LOG_NAME}_CLEANED
+						sed -e "s@	@ <TAB> @g"  > ${SITA_TEST_REPO}/${SITA_LOG_NAME}_CLEANED
 	echo "\nCreated ${SITA_TEST_REPO}/${SITA_LOG_NAME}_CLEANED"
 	
 	echo "\n\nParsing cleaned up log file & adding in header now..."
@@ -110,60 +111,40 @@ for SITA_LOG in ${EST_LOG} ${WST_LOG}; do
 	echo "=========================================================================================================================="
 done
 
-echo "\nTime sorting SITA_LOGS_COMBINED.out" ##        V this grep removes blank lines
+print -u1 -n "\nTime sorting SITA_LOGS_COMBINED.out" ##        V this grep removes blank lines
 cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED.out | sort | grep -v -e "^$" > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out
+print -u1 -n "   . . . Done\n"
 
+print -u1 -n "\nFiltering out Dates and Times out of range"
+${HOME}/GIT/AOC_WORK/calcTotSecs.awk -v DATE="${DATE}" -v TIME="${TIME}" ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out  2> ${SITA_TEST_REPO}/OUT_OF_RANGE.out
+print -u1 -n "   . . . Done\n"
 
+print -u1 -n "\nFixing Header fields with actual data"
+${HOME}/GIT/AOC_WORK/fixHeader.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out  > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out
+print -u1 -n "   . . . Done\n"
 
-
-
-#############${HOME}/GIT/AOC_WORK/fixHeader.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out  > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FIXED.out
-INPUT_DATE=$( echo ${DATE} | awk '{split($0,date_array,"-"); print date_array[1] date_array[2] date_array[3] }' )
-
-START_TIME=$( echo ${TIME} | cut -d "-" -f 1 )
-START_HH=$( echo ${START_TIME} | cut -c 1-2 )
-START_MM=$( echo ${START_TIME} | cut -c 3-4 )
-START_SS=$(( ${START_HH}*3600 + ${START_MM}*60 - 60 )) # Subtacting a FLUX minute to capture initial Events (missing seconds)
-#echo "${START_TIME} | ${START_HH} | ${START_MM} | ${START_SS} "
-
-FINISH_TIME=$( echo ${TIME} | cut -d "-" -f 2 )
-FINSIH_HH=$( echo ${FINISH_TIME} | cut -c 1-2 )
-FINSIH_MM=$( echo ${FINISH_TIME} | cut -c 3-4 )
-FINISH_SS=$(( ${FINSIH_HH}*3600 + ${FINSIH_MM}*60 + 60 )) #Adding a FLUX minute to capture last events (missing seconds)
-#echo "${FINISH_TIME} | ${FINSIH_HH} | ${FINSIH_MM} | ${FINISH_SS} "
-
-echo "Start Secs:${START_SS}"
-echo "Finish Secs:${FINISH_SS}"
-
-TOSS=${SITA_TEST_REPO}/OUT_OF_TIME_RANGE.out
-KEEP=${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED.out
-touch ${TOSS}
-touch ${KEEP}
-
-echo "Filtering out by Date"
-cat ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED.out | grep "${DATE}" | \
-	#awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 >> KEEP } else {print $0 >> TOSS } }' 
-	awk -v START_SS=${START_SS} -v FINISH_SS=${FINISH_SS} -v KEEP=${KEEP} -v TOSS=${TOSS} '{ if ( $3 >= START_SS && $3 <= FINISH_SS ){print $0 } }'    > ${SITA_TEST_REPO}/test.filter
-${HOME}/GIT/AOC_WORK/fixHeader.awk ${KEEP} > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out
+print -u1 -n "\nSplitting up lines again"
+${HOME}/GIT/AOC_WORK/seperate.awk ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out > ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED_SEPERATED.out
+print -u1 -n "   . . . Done\n"
 
 echo "Starting Comparision work... i think"
 
-ANALYZE_FILE=${SITA_TEST_REPO}/TEST_CASE_FILTER.out
-IGNORED_FILE=${SITA_TEST_REPO}/TEST_CASE_IGNORED.out
-touch ${ANALYZE_FILE}
-touch ${IGNORED_FILE}
+#ANALYZE_FILE=${SITA_TEST_REPO}/TEST_CASE_FILTER.out
+#IGNORED_FILE=${SITA_TEST_REPO}/TEST_CASE_IGNORED.out
+#touch ${ANALYZE_FILE}
+#touch ${IGNORED_FILE}
 
-echo "\nGetting TEST CASE LINE"
-for TEST_CASE in $( cat ${CASE} | sed -e "s@ @_@g" | grep "<BEGIN" ); do
-
-	FLID=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $2}' )
-	ITER=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $3}' )
-	TYPE=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $4}' )
-	echo "${FLID} | ${ITER} | ${TYPE}"
-	${HOME}/GIT/AOC_WORK/correspondence.awk -v FLID="${FLID}" -v ITER="${ITER}" -v TYPE="${TYPE}" -v ANALYZE_FILE="${ANALYZE_FILE}" -v IGNORED_FILE="${IGNORED_FILE}" ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out
-
+#echo "\nGetting TEST CASE LINE"
+#for TEST_CASE in $( cat ${CASE} | sed -e "s@ @_@g" | grep "<BEGIN" ); do
+#
+#	FLID=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $2}' )
+#	ITER=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $3}' )
+#	TYPE=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $4}' )
+#	echo "${FLID} | ${ITER} | ${TYPE}"
+##	${HOME}/GIT/AOC_WORK/correspondence.awk -v FLID="${FLID}" -v ITER="${ITER}" -v TYPE="${TYPE}" -v ANALYZE_FILE="${ANALYZE_FILE}" -v IGNORED_FILE="${IGNORED_FILE}" ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out
+#
 #	GREP_LINE=$( echo ${TEST_CASE} | sed -e "s@_@ @g" | awk '{print $2, $3, $4}' )
 #	echo "grepping \"${GREP_LINE}\""
 #	grep "${GREP_LINE}" ${SITA_TEST_REPO}/SITA_LOGS_COMBINED_SORTED_FILTERED_FIXED.out >> ${SITA_TEST_REPO}/TEST_CASE_FILTER.out
-done
-ls -ltr  $PWD/${SITA_TEST_REPO}
+#done
+ls -ltr  ${SITA_TEST_REPO}

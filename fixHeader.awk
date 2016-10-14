@@ -43,7 +43,7 @@ BEGIN {
 	#ITER=ARR[FLID]++
 	ARR[FLID]++    # THIS IS HOW WE COUNT THE NUMBER OF TIMES A FLID IS SEEN
 	ITER=ARR[FLID]
-	print DATE " " TIME " " SECS " " FLID " " ITER " " TYPE " " LDIR " | " MSG
+	print DATE " " TIME " " SECS " " FLID " " ITER " " TYPE " " LDIR " " MSG
 }
 
 END {
