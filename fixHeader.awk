@@ -5,6 +5,7 @@
 BEGIN {
 	DATE=""
 	TIME=""
+	BASE=""
 	ZERO=""
 	LDIR=""
 	ITER=""
@@ -17,6 +18,7 @@ BEGIN {
 	DATE=line_array[1]	
 	TIME=line_array[2]	
 	SECS=line_array[3]	
+	BASE=line_array[4]
 	FLID="<UNK_FLID>"
 	ITER="<ITER>"
 	TYPE="<UNK_TYPE>" 
@@ -43,7 +45,7 @@ BEGIN {
 	#ITER=ARR[FLID]++
 	ARR[FLID]++    # THIS IS HOW WE COUNT THE NUMBER OF TIMES A FLID IS SEEN
 	ITER=ARR[FLID]
-	print DATE " " TIME " " SECS " " FLID " " ITER " " TYPE " " LDIR " " MSG
+	print DATE " " TIME " " SECS " " BASE " " FLID " " ITER " " TYPE " " LDIR " " MSG
 }
 
 END {

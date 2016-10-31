@@ -53,7 +53,6 @@ BEGIN {
 	#print START_TIME " " START_HH ":" START_MM " " START_SEC " " STOP_SEC "-" STOP_TIME"-" STOP_HH":"STOP_MM
 	#exit
 }
-
 {
 	LINE_DATE=$1
 	LINE_TIME=$2
@@ -61,17 +60,22 @@ BEGIN {
 	split($0,line_array," ")
 
 	#Probably gonna add rebase function and field ****
+	if( NR == "1" ){ # First line of file
+		TOT_SEC=getSeconds(LINE_DATE,LINE_TIME)
+		BASE_SECS=TOT_SEC
+	}
 
 	if( LINE_DATE < USER_DATE ){
-		std_error("ERROR: Date Out of Range - "$0)
+		std_error("INFO: Date prior to User Start Date - "$0)
 	}
 	else if( LINE_DATE >= USER_DATE ){
 		TOT_SEC=getSeconds(LINE_DATE,LINE_TIME)
+		REBASE_SEC = TOT_SEC - BASE_SECS;
 
 		if( TOT_SEC >= START_SEC && TOT_SEC <= STOP_SEC ){
 			for (i=1; i<=NF; i++ ){   # This is probably the least efficient way to replace the place holders in field 3 with the total seconds
 				if( i == 3 ){
-					MSG=MSG " " TOT_SEC
+					MSG=MSG " " TOT_SEC " " REBASE_SEC
 				}
 				else {
 					MSG=MSG " " $i
@@ -80,7 +84,7 @@ BEGIN {
 			print MSG
 		}
 		else {
-			std_error("ERROR: Time Out of Range - "$0)
+			std_error("INFO: Time Out of User Entered Range - "$0)
 		}
 	}
 }
