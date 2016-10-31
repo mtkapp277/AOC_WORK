@@ -22,12 +22,12 @@ BEGIN {
 	FLID="<UNK_FLID>"
 	ITER="<ITER>"
 	TYPE="<UNK_TYPE>" 
-	LDIR=line_array[7]	
+	LDIR=line_array[8]	
 
 	#ZERO=line_array[3]	
 	#ITER=line_array[5]
-	MSG=$8
-	for ( i = 9; i<= NF; i++ ){
+	MSG=$9
+	for ( i = 10; i<= NF; i++ ){
 		if ( line_array[i] == "Type" && TYPE == "<UNK_TYPE>" ){
 			TYPE=line_array[i-1]
 		}
